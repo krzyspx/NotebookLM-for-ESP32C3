@@ -1,0 +1,21 @@
+
+unsigned long kodZapp = 0;
+
+
+void pin9_rec(String value) {
+  String str = value;
+  kodZapp = atol(str.c_str());
+  unsigned long a = kodZapp;
+  Serial.print("kod   "); Serial.println(a);
+  if (a) {sendkodpilot(a);}
+}
+
+
+/*
+
+void pin26_rec(String value) {
+  int v = value.toInt();
+  protZapp = byte(v);
+  printSetcod();
+}
+*/

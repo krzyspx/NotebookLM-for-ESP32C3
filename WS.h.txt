@@ -1,0 +1,123 @@
+IPAddress targetIP(192, 168, 2, 178);  // adr Virtuino
+int pongcounter = 15;
+#include <WebSocketsServer.h>
+WebSocketsServer webSocket = WebSocketsServer(8000);  // Default Virtuino Server port = 8000
+
+
+void sendPinsStatus();
+void onValueReceived(String tag, String value);
+
+//===================================================== webSocketEvent
+//This is the server handler. It receives all the messages
+
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length) {
+  switch (type) {
+    case WStype_DISCONNECTED:
+      Serial.printf("[%u] Disconnected!\n", num);
+      break;
+    case WStype_CONNECTED:
+      {
+        IPAddress ip = webSocket.remoteIP(num);
+        Serial.printf("[%u] New client connected - IP: %d.%d.%d.%d \n", num, ip[0], ip[1], ip[2], ip[3]);
+        sendPinsStatus();  // send the initial pin and variable values to the connected clients
+        break;
+      }
+    case WStype_TEXT:  // a new message received
+      {
+        Serial.printf("[%u] Received: %s\n", num, payload);
+        //-- The incoming payload is a json message. The following code extracts the value from json without extra library
+        String str = (char*)payload;
+        int p1 = str.indexOf("{\"");
+        if (p1 == 0) {
+          int p2 = str.indexOf("\":");
+          if (p2 > p1) {
+            String tag = str.substring(p1 + 2, p2);
+            p1 = str.indexOf(":\"", p2);
+            if (p1 > 0) {
+              p2 = str.lastIndexOf("\"}");
+              if (p2 > 0) {
+                String value = str.substring(p1 + 2, p2);
+                onValueReceived(tag, value);
+              }
+            }
+          }
+        }
+        break;
+      }
+    case WStype_PING:  // pong will be send automatically
+      {
+
+        //Serial.println("get ping*****************");
+        break;
+      }
+    case WStype_PONG:  // answer to a ping we send
+      {
+        //   Serial.println("get pong*---------------*");
+          esp_task_wdt_reset();
+        break;
+      }
+  }
+}
+
+//===================================================== sendValue
+// This function sends a value to a Tag.
+// The tag and the value are converted to a json message before sending
+
+bool sendValue(const char* tag, String value) {
+  String json = "{\"";
+  json += tag;
+  json += "\":\"";
+  json += value;
+  json += "\"}";
+  Serial.println("Send: " + json);
+  return webSocket.broadcastTXT(json);  // This function sends the message to all connected clients.
+}
+
+//============================================================== vDelay
+void vDelay(int delayInMillis) {
+  long t = millis() + delayInMillis;
+  while (millis() < t) webSocket.loop();
+}
+int i = 0;
+int j = 10;
+int k = 0;
+
+void czy_Virtuino() {
+
+  if (webSocket.clientIsConnected(i)) {
+   // Serial.println("VIRTUINO jest ONLINE ");
+    k = 0;
+    j = 10;
+  } else {
+   // Serial.println("VIRTUINO jest OFFLINE ");
+    j = j - 1;
+    if (j < 1) {
+      j = 10;
+      if (k == 0) {
+        Serial.println("WS reset ");
+        webSocket.disconnect();
+ 
+        k = 1;
+      } else {
+              Serial.println("WS restart ");
+        webSocket.begin();
+        k=0;
+      }
+    }
+  }
+}
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*
+if (program_start==0) 
+ {
+   timer_ws=millis();
+   program_start=1;
+ }
+if ((timer_ws+15000)<millis()) 
+ {
+    Serial.println("\nreboot websocket");
+    timer_ws=millis();
+    webSocket.close();
+    webSocket.begin();
+  }
+  */

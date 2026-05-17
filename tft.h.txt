@@ -1,0 +1,92 @@
+
+#include <SPI.h>
+#include <TFT_eSPI.h>  // Hardware-specific library
+//#include "Unicode_Test_72.h"
+
+TFT_eSPI tft = TFT_eSPI();  // Invoke custom library
+
+//#define cs 10 //podłączyć do BLK 240x280
+int atft = 0;
+int kolorwysytft = 0;  // zmienia kolor wyświetlacza gdy pompa załączona
+
+void tftsetup() {
+  // pinMode(cs, OUTPUT);  //LED na module
+  // digitalWrite(cs, HIGH);
+
+  tft.init();
+  tft.setRotation(1);
+  tft.fillScreen(TFT_BLACK);
+
+  /*
+  tft.invertDisplay(true);  // Where i is true or false
+  tft.setCursor(0, 0, 8);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK, true);
+  // tft.setTextColor(TFT_WHITE);
+  tft.print("");
+  tft.println("32.5");
+  tft.println("1021");
+  tft.print("  ");
+  tft.println("50:");
+  */
+}
+/*
+String tempzewtft = "0";
+void pin14_rec(String value) {
+  tempzewtft = value;
+}
+*/
+void tft_timer() {
+
+  // tft.invertDisplay(false);  // Where i is true or false
+
+  // Binary inversion of colours
+
+  // tft.fillScreen(TFT_BLACK);
+  //  tft.drawRect(0, 0, tft.width(), tft.height(), TFT_GREEN);
+  // if (atft == 0) {
+  tft.invertDisplay(true);  // Where i is true or false
+  tft.setCursor(0, 0, 8);
+  if (kolorwysytft == 0) {
+    tft.setTextColor(TFT_GREEN, TFT_BLACK, true);
+  } else {
+    tft.setTextColor(TFT_BLUE, TFT_BLACK, true);
+  }
+  // tft.setTextColor(TFT_WHITE);
+  tft.print("");
+  //tft.print(tempzewtft);
+ // tft.println(" ");
+ // tft.print(hpatft);
+  //tft.println("  ");
+ // tft.print(temp2tft);
+  tft.print("  ");
+  tft.print(wilgtft);
+   tft.println("  ");
+  tft.println("-------");
+   tft.print("");
+  tft.print(temptft);
+  tft.print(".");
+  tft.print(String(aaaa));
+  tft.println(" ");
+  //tft.print(co2tft);
+  //tft.println("  CO2   ");
+  //tft.print(tvoctft);
+  //tft.println("    ");
+
+
+
+  // } else {
+  /*
+    tft.invertDisplay(true);  // Where i is true or false
+    tft.setCursor(0, 0, 6);
+
+    //tft.setTextColor(TFT_WHITE);
+    tft.setTextColor(TFT_GREEN, TFT_BLACK, true);
+    tft.print("");
+    tft.println("35.3");
+    tft.println("1017");
+    tft.print("  ");
+    tft.println("48:");
+  }
+  atft = !atft;
+  */
+}

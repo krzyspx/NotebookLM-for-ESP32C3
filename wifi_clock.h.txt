@@ -1,0 +1,84 @@
+/* 170 licznik
+ *  171 pompa
+ *  169 test
+ *  172 grzałka
+ * 174 jacuzzy
+ * 175 siec
+ 180 ESP32
+ 181 ESP32 stacja pomiarowa
+ 183 pompa 32c3
+ 184 siec 32c3
+ 185 COtemp 32c3
+ */
+#include <WiFi.h>
+#include <NTPClient.h>      // for clock NTP
+#include <WiFiUdp.h>      // for clock NTP
+
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
+
+const char* ssid = "xxx";                  // WIFI network SSID
+const char* password = "11111111111";        // WIFI network PASSWORD
+String nazwa_ESP = String("ESP32C3_COtemp");     // nazwa ESP w DHCP
+
+IPAddress ip(192, 168, 2, 185);            // where 150 is the desired IP Address. The first three numbers must be the same as the router IP
+IPAddress gateway(192, 168, 2, 1);
+IPAddress subnet(255, 255, 255, 0);        // set subnet mask to match your network
+IPAddress ip4 = ipaddr_addr( "8.8.8.8" );  //dns 1
+IPAddress ip5 = ipaddr_addr( "8.8.4.4" );  //dns 2
+
+//#define led_wew   8
+//===================================================== connectToWiFiNetwork
+
+void connectToWiFiNetwork() {
+  Serial.println("Connecting to " + String(ssid));
+  WiFi.mode(WIFI_STA);
+
+  WiFi.config(ip, gateway, subnet, ip4, ip5); 
+  WiFi.setHostname(nazwa_ESP.c_str());
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+ // digitalWrite(led_wew, HIGH); //wył LED wew jako potwierdzenie połączenia z WiFi
+
+  Serial.print("\nWiFi connected   ");
+  Serial.println(WiFi.localIP());              // Insert this IP on Virtuino IoT server settings
+  Serial.print("\nHost name   ");
+  Serial.println(WiFi.getHostname());
+}
+
+void ntpsetup() {
+  timeClient.begin();
+  timeClient.setTimeOffset(3600);   //przesunięcie na czas PL dopasowanie strefy czasowej
+}
+
+int currentHour = 0;
+int currentMinute = 0;
+void get_time_ntp() {               //pobranie aktualnych danych zegara NTP
+  timeClient.update();
+
+  String formattedTime = timeClient.getFormattedTime();
+  Serial.print("Formatted Time: ");
+  Serial.println(formattedTime);
+
+    currentHour = timeClient.getHours();
+//    Serial.print("Hour: ");
+//    Serial.println(currentHour);
+
+    currentMinute = timeClient.getMinutes();
+//    Serial.print("Minutes: ");
+//    Serial.println(currentMinute);
+ /* 
+    int currentSecond = timeClient.getSeconds();
+    Serial.print("Seconds: ");
+    Serial.println(currentSecond);
+  */
+}
+
+int time_ok = 0;
+int time_compare(int _hour, int _minute) {
+  if (_hour == currentHour && _minute == currentMinute) return 1; else  return 0;
+}
+

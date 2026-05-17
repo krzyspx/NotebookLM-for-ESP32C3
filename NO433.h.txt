@@ -1,0 +1,54 @@
+#include <RCSwitch.h>
+
+RCSwitch mySwitch = RCSwitch();
+
+#define ESP01 1
+#define D1MINI 2
+int procesor = D1MINI;
+unsigned long o_kod = 0;
+int licznik = 0;
+
+void no433setup() {
+  if (procesor == D1MINI) {
+    mySwitch.enableReceive(0);    // port odbiornika
+    mySwitch.enableTransmit(10);  // nadajnika
+  } else if (procesor == ESP01) {
+    mySwitch.enableReceive(3);
+    mySwitch.enableTransmit(1);
+  }
+}
+
+void no433akcja() {
+  if (!mySwitch.available()) return;  // brak sygnału -> wyjście
+
+  o_kod = mySwitch.getReceivedValue();
+
+  // Przygotowanie czytelnego tekstu do monitorowania
+  String str =  String(o_kod) + " / " + mySwitch.getReceivedBitlength() + " / " + mySwitch.getReceivedDelay() + " / " + mySwitch.getReceivedProtocol();
+
+  // Wysyłanie danych
+  sendValue(pin2, String(o_kod));
+  sendValue(pin3, str);
+ // Serial.println(str);
+
+  // Reset i restart odbiornika
+  mySwitch.disableReceive();
+  mySwitch.resetAvailable();
+  no433setup();
+}
+
+void sendkod(unsigned long code, int impuls, byte bity, byte prot) {
+  mySwitch.disableReceive();
+  mySwitch.setPulseLength(impuls);
+  mySwitch.setRepeatTransmit(10);
+  mySwitch.send(code, bity);
+  no433setup();
+}
+
+void sendkodpilot(unsigned long code) {
+  sendkod(code, 340, 24, 1);
+}
+
+void sendkodltc(unsigned long code) {
+  sendkod(code, 176, 24, 0);
+}

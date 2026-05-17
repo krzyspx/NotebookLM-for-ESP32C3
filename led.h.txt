@@ -1,0 +1,105 @@
+
+void czy_Virtuino();
+#define led_czerw 7  //
+#define boot 9       //przycisk boot
+#define sww 1
+#define led_wew 8
+
+#include <Adafruit_NeoPixel.h>
+#define LED_PIN 7  // 10 dla ZERO 7 dla C3 MINI i C3 PICO
+#define LED_COUNT 1
+#define BRIGHTNESS 50  // Set BRIGHTNESS to about 1/5 (max = 255)
+
+int R = 255;
+int G = 0;
+int B = 0;
+
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRBW + NEO_KHZ800);
+
+
+void ledsetup() {
+  pinMode(led_czerw, OUTPUT);  //LED na module
+  digitalWrite(led_czerw, LOW);
+
+  pinMode(led_wew, OUTPUT);  //LED na module
+  digitalWrite(led_wew, LOW);
+
+  pinMode(boot, INPUT_PULLUP);
+  pinMode(sww, INPUT_PULLUP);
+
+  strip.begin();  // INITIALIZE NeoPixel strip object (REQUIRED)
+  strip.show();   // Turn OFF all pixels ASAP
+  strip.setBrightness(BRIGHTNESS);
+}
+
+int test_led_wew = 0;   //1 - przycik test on
+int flaga_led_wew = 0;  //0 - brak połączenia
+void connetion_test() {
+  if (WiFi.status() != WL_CONNECTED) {
+    flaga_led_wew = 0;
+  } else {
+    flaga_led_wew = 1;
+  }  //wł LED gdy nie ma WiFi
+  if (test_led_wew) {
+    digitalWrite(led_wew, LOW);
+  } else {
+    digitalWrite(led_wew, flaga_led_wew);
+  }
+czy_Virtuino();
+
+}
+
+void pin6_rec(String value)  //LED in ESP
+{
+  int v = value.toInt();
+  test_led_wew = v;
+  digitalWrite(led_wew, LOW);
+}
+
+int test_czer = 0;
+int flaga_led = 1;
+void led_timer() {
+  // flaga_led = !flaga_led;
+  if (test_czer) {
+    digitalWrite(led_czerw, LOW);
+  } else {
+    digitalWrite(led_czerw, flaga_led);
+  }
+  connetion_test();
+
+  // strip.setPixelColor(0, strip.Color(R, G, B));               //  Set pixel's color (in RAM)
+  //  strip.show();
+  int xx = R;
+  R = G;
+  G = B;
+  B = xx;
+}
+void pin7_rec(String value)  //LED in ESP
+{
+  int v = value.toInt();
+  test_czer = v;
+  digitalWrite(led_czerw, LOW);
+}
+
+int stanswOnOff = 1;
+void swOnOff() {
+  if (stanswOnOff != digitalRead(sww)) sendValue(pin1, String(digitalRead(sww)));  // sww esp ----> app
+  stanswOnOff = digitalRead(sww);
+}
+int bootOnOff = 1;
+void testboot() {
+  if (bootOnOff != digitalRead(boot)) Serial.println(digitalRead(boot));  // sww esp ----> app
+  bootOnOff = digitalRead(boot);
+}
+void sw_boot_test() {
+  swOnOff();
+  testboot();
+}
+
+int wsk_led = 0;
+void led_app_timer()  // esp -----> app every 3000 ms
+{
+  wsk_led = !wsk_led;
+  sendValue(pin0, String(wsk_led));  //esp ----> app
+  //  scaner();
+}

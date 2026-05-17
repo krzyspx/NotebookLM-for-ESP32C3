@@ -1,0 +1,123 @@
+#include <Wire.h>
+#define Addr 0x44
+
+
+
+float ahtValue;  //to store T/RH result
+int ahtvalueint;
+
+
+int temptft = 0;
+int hpatft = 0;
+int temp2tft = 0;
+int co2tft = 0;
+int wilgtft = 0;
+int tvoctft = 0;
+int aaaa = 0;
+
+void I2Csetup() {
+  Wire.begin();  //  Wire.begin(8, 9);  // sda=  /scl=
+}
+
+int i2ca = 0;
+String temp_old = "";
+String wilg_old = "";
+void I2C_timer() {
+
+  unsigned int data[6];
+
+  // Start I2C Transmission
+  Wire.beginTransmission(Addr);
+  // Send measurement command
+  Wire.write(0x2C);
+  Wire.write(0x06);
+  // Stop I2C transmission
+  Wire.endTransmission();
+  // delay(500);
+
+  // Request 6 bytes of data
+  Wire.requestFrom(Addr, 6);
+
+  // Read 6 bytes of data
+  // cTemp msb, cTemp lsb, cTemp crc, humidity msb, humidity lsb, humidity crc
+  if (Wire.available() == 6) {
+    data[0] = Wire.read();
+    data[1] = Wire.read();
+    data[2] = Wire.read();
+    data[3] = Wire.read();
+    data[4] = Wire.read();
+    data[5] = Wire.read();
+  }
+
+  // Convert the data
+  float cTemp = ((((data[0] * 256.0) + data[1]) * 175) / 65535.0) - 45;
+  temptft = cTemp;
+  //float fTemp = (cTemp * 1.8) + 32;
+  float humidity = ((((data[3] * 256.0) + data[4]) * 100) / 65535.0);
+  wilgtft = humidity;
+  aaaa = (cTemp * 10 - temptft * 10);
+  //Serial.println(String(aaaa));
+  String str = String(cTemp);
+  sendValue(pin11, str);  //temperatura ----> app
+  str = String(humidity);
+  sendValue(pin12, str);  //temperatura ----> app
+
+
+
+  /*
+
+  
+  str = String(wilgtft);  // oszczedzam 3 kB pamieci
+  if (str != wilg_old) {
+    sendValue(pin12, str);  //temperatura ----> app
+    wilg_old = str;
+  }
+*/
+}
+
+
+//--------------------------scanner I2C-----------
+int scaneronoff = 0;
+void pin8_rec(String value)  //LED in ESP
+{
+  int v = value.toInt();
+  scaneronoff = v;
+}
+
+int a = 0;
+String str;
+String str_old;
+void scaner() {
+  if (scaneronoff) {
+    if (a) {
+      Wire.begin(8, 9);
+    } else {
+      Wire.begin(5, 4);
+    }  //Wire.begin(I2C_SDA, I2C_SCL);
+    a = !a;
+    str = "";
+    byte error, address;
+    int nDevices;
+    nDevices = 0;
+    for (address = 1; address < 127; address++) {
+      Wire.beginTransmission(address);
+      error = Wire.endTransmission();
+      if (error == 0) {
+        str = "port " + String(a) + "  Addr 0x" + String(address, HEX);
+        nDevices++;
+      }
+    }
+    if (nDevices == 0) {
+      str = "port " + String(a) + " No I2C";
+    }
+    Wire.end();
+  } else {
+    str = "scanner off";
+  }
+
+  if (str != str_old) {
+    sendValue(pin5, str);
+    //  Serial.println(str);
+    str_old = str;
+  }
+}

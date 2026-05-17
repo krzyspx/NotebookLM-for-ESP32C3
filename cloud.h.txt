@@ -1,0 +1,24 @@
+
+#include <ArduinoIoTCloud.h>
+#include <Arduino_ConnectionHandler.h>
+
+const char DEVICE_LOGIN_NAME[]  = "49594609-348b-46dd-9378-88888888888;
+const char DEVICE_KEY[]  = "D56GXEIORInnnnnnnnnnn";    // Secret device password
+
+void initProperties();
+
+WiFiConnectionHandler ArduinoIoTPreferredConnection(ssid, password);
+//--------------------------------
+void cloudsetup() {
+
+  initProperties();
+  ArduinoCloud.begin(ArduinoIoTPreferredConnection);  // Connect to Arduino IoT Cloud
+
+  //     Print info about cloud connetion set 0 to 4
+  setDebugMessageLevel(4);
+  ArduinoCloud.printDebugInfo();
+}
+
+void cloudloop() {
+  ArduinoCloud.update();
+}
